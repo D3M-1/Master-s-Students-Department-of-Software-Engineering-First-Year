@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>كشف الطلاب - ماجستير هندسة البرمجيات</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* إعدادات عامة */
+        :root {
+            --bg: #f9fafb;
+            --card-bg: #ffffff;
+            --text: #1f2937;
+            --border: #d1d5db;
+            --header-bg: #f3f4f6;
+            --primary: #1a56db;
+            --primary-hover: #1e429f;
+            --secondary: #6b7280;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            direction: rtl;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            color: var(--primary);
+            font-size: 26px;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            color: var(--secondary);
+            font-size: 16px;
+            margin-top: 0;
+        }
+
+        /* أزرار المواد الدراسية */
+        .subjects-nav {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 20px;
+        }
+
+        .subject-btn {
+            padding: 10px 30px;
+            font-size: 18px;
+            font-family: inherit;
+            font-weight: 700;
+            background-color: transparent;
+            color: var(--secondary);
+            border: 2px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            direction: ltr; /* لجعل اختصار المادة يظهر بشكل صحيح SE202 */
+        }
+
+        .subject-btn:hover {
+            background-color: #e5e7eb;
+            color: var(--text);
+        }
+
+        .subject-btn.active {
+            background-color: #e0e7ff;
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        /* محتوى المواد */
+        .subject-content {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .subject-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* رسالة عدم وجود بيانات */
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            color: var(--secondary);
+            font-size: 18px;
+        }
+
+        /* التبويبات (حضوري / أونلاين) */
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            padding: 10px 25px;
+            font-size: 16px;
+            font-family: inherit;
+            font-weight: 700;
+            background-color: var(--card-bg);
+            color: var(--text);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* شريط البحث */
+        .search-box {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: flex-start;
+        }
+
+        .search-box input {
+            width: 100%;
+            max-width: 400px;
+            padding: 10px 15px;
+            font-size: 15px;
+            font-family: inherit;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .search-box input:focus {
+            border-color: var(--primary);
+        }
+
+        /* الجداول */
+        .table-wrapper {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            overflow-x: auto;
+            display: none;
+            padding: 1px;
+        }
+
+        .table-wrapper.active {
+            display: block;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: right;
+            min-width: 900px;
+        }
+
+        th {
+            background-color: var(--header-bg);
+            padding: 15px;
+            font-weight: 700;
+            color: #374151;
+            border-bottom: 1px solid var(--border);
+            border-left: 1px solid var(--border);
+            white-space: nowrap;
+            text-align: center;
+        }
+
+        th:last-child {
+            border-left: none;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border);
+            border-left: 1px solid var(--border);
+            color: var(--text);
+            text-align: center;
+        }
+
+        td:last-child {
+            border-left: none;
+        }
+
+        tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* تنسيقات خاصة للخلايا */
+        .email-cell {
+            direction: ltr;
+            text-align: center;
+            color: var(--text);
+            font-size: 14px;
+            font-family: monospace;
+        }
+
+        .num-cell {
+            direction: ltr;
+            text-align: center;
+            font-family: monospace;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        /* التجاوب مع الموبايل */
+        @media (max-width: 768px) {
+            .tabs, .subjects-nav {
+                flex-direction: column;
+            }
+            .search-box input {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>كشف طلاب ماجستير هندسة البرمجيات - الفرقة الأولى</h1>
+        <p>إجمالي الطلاب: 71 (28 حضوري / 43 أونلاين)</p>
+    </div>
+
+    <!-- أزرار المواد الدراسية -->
+    <div class="subjects-nav">
+        <button class="subject-btn" onclick="showSubject('se201', this)">SE201</button>
+        <button class="subject-btn active" onclick="showSubject('se202', this)">SE202</button>
+        <button class="subject-btn" onclick="showSubject('se203', this)">SE203</button>
+    </div>
+
+    <!-- محتوى مادة SE201 (فارغ) -->
+    <div id="se201" class="subject-content">
+        <div class="empty-state">
+            <h3>لا توجد بيانات مسجلة لمادة SE201 حالياً.</h3>
+            <p>سيتم إضافة الطلاب فور التسجيل.</p>
+        </div>
+    </div>
+
+    <!-- محتوى مادة SE202 (يحتوي على الجداول) -->
+    <div id="se202" class="subject-content active">
+        <div class="tabs">
+            <button class="tab-btn active" onclick="showTab('attendance', this)">الطلاب الحضوري</button>
+            <button class="tab-btn" onclick="showTab('online', this)">الطلاب الأونلاين</button>
+        </div>
+
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="ابحث بالاسم، الرقم، أو الإيميل..." onkeyup="filterData()">
+        </div>
+
+        <!-- جدول الحضوري -->
+        <div id="attendance" class="table-wrapper active">
+            <table id="table-attendance">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>الاسم رباعي</th>
+                        <th>رقم الموبيل / واتساب</th>
+                        <th>الرقم القومي / الجواز</th>
+                        <th>E-Mail</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>1</td><td>محمد حسام الدين محمد سلامه</td><td class="num-cell">01111747501</td><td class="num-cell">29606180102137</td><td class="email-cell">Moh</td></tr>
+                    <tr><td>2</td><td>محمد السيد أبو العلا الدرولى</td><td class="num-cell">01100510188</td><td class="num-cell">28511011503136</td><td class="email-cell">mohamedelsayedeldarawaly@gmail.com</td></tr>
+                    <tr><td>3</td><td>ابانوب بشاي بشري عازر</td><td class="num-cell">01001566294</td><td class="num-cell">30309012619494</td><td class="email-cell">abanwbbshaybshryalbswlh@gmail.com</td></tr>
+                    <tr><td>4</td><td>محمود عبدالباسط حسن محمود مجاهد</td><td class="num-cell">01157679999</td><td class="num-cell">28401270101011</td><td class="email-cell">Ma7moud.baset@gmail.com</td></tr>
+                    <tr><td>5</td><td>اسلام محمد عابدين محمد</td><td class="num-cell">01030474894</td><td class="num-cell">30006042703276</td><td class="email-cell">eslam3abdeen46@gmail.com</td></tr>
+                    <tr><td>6</td><td>روان محمد السيد طه</td><td class="num-cell">01069411254</td><td class="num-cell">202506630</td><td class="email-cell">rawanmohamed504@gmail.com</td></tr>
+                    <tr><td>7</td><td>صفا عبدالحميد محمد محمد بدوى</td><td class="num-cell">01019554915</td><td class="num-cell">29705181800804</td><td class="email-cell">safabadwyy@gmail.com</td></tr>
+                    <tr><td>8</td><td>اسراء سليمان محمد عبد المنعم</td><td class="num-cell">01012344979</td><td class="num-cell">30210122301027</td><td class="email-cell">esraasoliman616@gmail.com</td></tr>
+                    <tr><td>9</td><td>محمد حسين على عبدالرسول</td><td class="num-cell">01007107002</td><td class="num-cell">28402082401918</td><td class="email-cell">mhmd.abdelrasoul@gmail.com</td></tr>
+                    <tr><td>10</td><td>محمد علاء الدين محمد القماش</td><td class="num-cell">01000072493</td><td class="num-cell">28209191300159</td><td class="email-cell">alaadin24@gmail.com</td></tr>
+                    <tr><td>11</td><td>صلاح حسين السيد حسين</td><td class="num-cell">01115077603</td><td class="num-cell">30408090100932</td><td class="email-cell">seifadham47@gmail.com</td></tr>
+                    <tr><td>12</td><td>اسلام جمال توفيق محمد</td><td class="num-cell">01038833122</td><td class="num-cell">29806101402375</td><td class="email-cell">Igtmm293@gmail.com</td></tr>
+                    <tr><td>13</td><td>محمد احمد محمد احمد سليم</td><td class="num-cell">01006800459</td><td class="num-cell">28005132200154</td><td class="email-cell">maasselim@gmail.com</td></tr>
+                    <tr><td>14</td><td>عبدالرحمن علي محمد عبدالسيد</td><td class="num-cell">+201142241930</td><td class="num-cell">29405010104997</td><td class="email-cell">abdelrahmanali.abdelsayed@gmail.com</td></tr>
+                    <tr><td>15</td><td>زينب احمد محمود احمد</td><td class="num-cell">01040612803</td><td class="num-cell">30405271202045</td><td class="email-cell">zainabahmedmnn@gmail.com</td></tr>
+                    <tr><td>16</td><td>سيد محمد شوقى زينهم</td><td class="num-cell">01157606832</td><td class="num-cell">27001150104538</td><td class="email-cell">sayed.zenhom@gmail.com</td></tr>
+                    <tr><td>17</td><td>محمد احمد محمد غازي</td><td class="num-cell">01029077131</td><td class="num-cell">29803071600151</td><td class="email-cell">mohameghzy@gmail.com</td></tr>
+                    <tr><td>18</td><td>ألفريد ماجد فريد</td><td class="num-cell">01201964212</td><td class="num-cell">30306012400337</td><td class="email-cell">alfredmagedfarid@gmail.com</td></tr>
+                    <tr><td>19</td><td>وليد عادل عبد المنعم علي</td><td class="num-cell">01019857504</td><td class="num-cell">30306012607993</td><td class="email-cell">waleedadel979@gmail.com</td></tr>
+                    <tr><td>20</td><td>حبيبه حامد احمد سلامه</td><td class="num-cell">01062293583</td><td class="num-cell">30105071701604</td><td class="email-cell">habibaabdullah36@gmail.com</td></tr>
+                    <tr><td>21</td><td>محمد جمال حسين الشوربجى</td><td class="num-cell">012 25103049</td><td class="num-cell">29403068800871</td><td class="email-cell">Medio.s2014@yahoo.com</td></tr>
+                    <tr><td>22</td><td>زينب متولي محمود عرابي</td><td class="num-cell">01009626104</td><td class="num-cell">29008051202309</td><td class="email-cell">zayneporabi@gmail.com</td></tr>
+                    <tr><td>23</td><td>طه محمد سليمان محمود خضر</td><td class="num-cell">01002981308</td><td class="num-cell">28102101403915</td><td class="email-cell">t.khader81@gmail.com</td></tr>
+                    <tr><td>24</td><td>تامر احمد محمود فتيحه</td><td class="num-cell">01026751515</td><td class="num-cell">28201100400252</td><td class="email-cell">tamerhassan20102010@gmail.com</td></tr>
+                    <tr><td>25</td><td>مريم عيد محمد السعيد علي حسن</td><td class="num-cell">01149551734</td><td class="num-cell">29909011221081</td><td class="email-cell">mariameid1920@gmail.com</td></tr>
+                    <tr><td>26</td><td>عمر رجب سلطان رجب</td><td class="num-cell">01062641995</td><td class="num-cell">29712262300152</td><td class="email-cell">eng.osultan.it@gmail.com</td></tr>
+                    <tr><td>27</td><td>محمد أحمد خير الدين محمد</td><td class="num-cell">01210833105</td><td class="num-cell">28909110104298</td><td class="email-cell">mk4serv@gmail.com</td></tr>
+                    <tr><td>28</td><td>محمد رضا محمد أحمد</td><td class="num-cell">01212289484</td><td class="num-cell">29811050102537</td><td class="email-cell">mohamadfouda33@gmail.com</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- جدول الأونلاين -->
+        <div id="online" class="table-wrapper">
+            <table id="table-online">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>الاسم رباعي</th>
+                        <th>رقم الموبيل / واتساب</th>
+                        <th>الرقم القومي / الجواز</th>
+                        <th>E-Mail</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>1</td><td>محمود محمد ابراهيم زاهر</td><td class="num-cell">00966565907242</td><td class="num-cell">27711011200252</td><td class="email-cell">mxz770@gmail.com</td></tr>
+                    <tr><td>2</td><td>خليل يوسف محمود احمد</td><td class="num-cell">00966549825078</td><td class="num-cell">28303138800171</td><td class="email-cell">khscript@gmail.com</td></tr>
+                    <tr><td>3</td><td>طارق محمد صلاح حافظ</td><td class="num-cell">01069229546</td><td class="num-cell">29005100101093</td><td class="email-cell">tarek.mohamed451@gmail.com</td></tr>
+                    <tr><td>4</td><td>الحسيني فوزي الحسيني الاشموني</td><td class="num-cell">01062384385 - 00966506093276</td><td class="num-cell">27109111600078</td><td class="email-cell">housainy@gmail.com</td></tr>
+                    <tr><td>5</td><td>عمر تامر وفائي العجماوي</td><td class="num-cell">+971 58 574 8568</td><td class="num-cell">30012050100637</td><td class="email-cell">Alagamawyomar@gmail.com</td></tr>
+                    <tr><td>6</td><td>احمد حسن عبد المنعم عبد الوهاب</td><td class="num-cell">01009585666</td><td class="num-cell">28905071300836</td><td class="email-cell">ahmed.hassan.sys@gmail.com</td></tr>
+                    <tr><td>7</td><td>عمر محمد عبدالهادي حسين</td><td class="num-cell">01118945597</td><td class="num-cell">29404168800072</td><td class="email-cell">omar.abdelhady.ok@gmail.com</td></tr>
+                    <tr><td>8</td><td>احمد محمود محمد عبده</td><td class="num-cell">01129033385</td><td class="num-cell">29408068800453</td><td class="email-cell">a.b.c20012019@gmail.com</td></tr>
+                    <tr><td>9</td><td>على محمد على السيد</td><td class="num-cell">01000726075</td><td class="num-cell">29308151604033</td><td class="email-cell">ali.sharaf262@gmail.com</td></tr>
+                    <tr><td>10</td><td>عبدالرحمن محمد عبدالفتاح يحي</td><td class="num-cell">01093934554</td><td class="num-cell">30002252402559</td><td class="email-cell">abdelrhman.m.elkilany@gmail.com</td></tr>
+                    <tr><td>11</td><td>يزن خالد خضر الزهراني</td><td class="num-cell">1038856199</td><td class="num-cell">BA27879</td><td class="email-cell">Yzaankahld@gmail.com</td></tr>
+                    <tr><td>12</td><td>ايمن جمال عبد الوهاب عبد المعطي غازي</td><td class="num-cell">+966540763525</td><td class="num-cell">29609051500931</td><td class="email-cell">aymanghazi2587@gmail.com</td></tr>
+                    <tr><td>13</td><td>اسلام فارس احمد ابراهيم</td><td class="num-cell">01066825720</td><td class="num-cell">28108160202611</td><td class="email-cell">i.fareseg@gmail.com</td></tr>
+                    <tr><td>14</td><td>عبدالله أسامة عبدالحميد عوض</td><td class="num-cell">01090333179</td><td class="num-cell">28506011700531</td><td class="email-cell">abdullah.osama.pro@gmail.com</td></tr>
+                    <tr><td>15</td><td>رحمه يحيي عبد الستار عبد الرحمن</td><td class="num-cell">01102625227</td><td class="num-cell">30109270400244</td><td class="email-cell">rahmayahia181@gmail.com</td></tr>
+                    <tr><td>16</td><td>احمد محمد الامين عبد المجيد عبد النبي</td><td class="num-cell">01114790265</td><td class="num-cell">29706072500678</td><td class="email-cell">01114790265ahmedmohamed@gmail.com</td></tr>
+                    <tr><td>17</td><td>ولاء عبدالكريم محمد زاهر</td><td class="num-cell">01208571899</td><td class="num-cell">29804091200865</td><td class="email-cell">walaazahir4@gmail.com</td></tr>
+                    <tr><td>18</td><td>ياسر عادل احمد السيد</td><td class="num-cell">01155630808</td><td class="num-cell">29203240102339</td><td class="email-cell">yaserabusamra@gmail.com</td></tr>
+                    <tr><td>19</td><td>سيد حنفي محمود محمد جمعة</td><td class="num-cell">01013960006</td><td class="num-cell">29101150100071</td><td class="email-cell">sayedhanafy00@gmail.com</td></tr>
+                    <tr><td>20</td><td>محمد حسن عبد الحكيم الحنفي</td><td class="num-cell">01006932483</td><td class="num-cell">28401221702379</td><td class="email-cell">thephilosopher10@gmail.com</td></tr>
+                    <tr><td>21</td><td>زينب ايمن احمد هنداوي</td><td class="num-cell">01124087276</td><td class="num-cell">30111152301902</td><td class="email-cell">zeinabayman711@gmail.com</td></tr>
+                    <tr><td>22</td><td>محمود زكريا محمود فهمي</td><td class="num-cell">0111711986</td><td class="num-cell">30003072103339</td><td class="email-cell">mahmoudzakarya50@gmail.com</td></tr>
+                    <tr><td>23</td><td>احمد فوزى عبدالخالق على احمد الزيات</td><td class="num-cell">01099104396</td><td class="num-cell">29310031401133</td><td class="email-cell">ahmeffawzy9@gmail.com</td></tr>
+                    <tr><td>24</td><td>ضحي محمد ابراهيم الشافعي</td><td class="num-cell">01551477663</td><td class="num-cell">30308122103942</td><td class="email-cell">dohaelshafei52@gmail.com</td></tr>
+                    <tr><td>25</td><td>هاني إبراهيم الدسوقي السيد</td><td class="num-cell">00966562108699</td><td class="num-cell">28603081200477</td><td class="email-cell">hanyweal@gmail.com</td></tr>
+                    <tr><td>26</td><td>خالد علاء الدين محمد صلاح الدين</td><td class="num-cell">01120440060</td><td class="num-cell">28807092100096</td><td class="email-cell">Pilotkhaled63@gmail.com</td></tr>
+                    <tr><td>27</td><td>محمد محمود محمد العليدى</td><td class="num-cell">01000476700</td><td class="num-cell">28311080300299</td><td class="email-cell">mohamed.el3laidy@gmail.com</td></tr>
+                    <tr><td>28</td><td>احمد عاطف محمد محمد</td><td class="num-cell">01150624771</td><td class="num-cell">12422026480399</td><td class="email-cell">Ahmedatef.zyada@gmail.com</td></tr>
+                    <tr><td>29</td><td>محمد مجدى محمد محمد رجب</td><td class="num-cell">01038368888</td><td class="num-cell">29409251404571</td><td class="email-cell">mmagdymhoor@gmail.com</td></tr>
+                    <tr><td>30</td><td>سامي حمدان مرضي الغامدي</td><td class="num-cell">966503992676</td><td class="num-cell">V493845</td><td class="email-cell">nkb1405@gmail.com</td></tr>
+                    <tr><td>31</td><td>عز نورالدين محمد عبدالرحيم</td><td class="num-cell">+96550117854</td><td class="num-cell">29201012637092</td><td class="email-cell">ea201061@gmail.com</td></tr>
+                    <tr><td>32</td><td>ايات عادل حامد عبدالفتاح</td><td class="num-cell">01152202156</td><td class="num-cell">29001012136205</td><td class="email-cell">ayatadelzamalek@gmail.com</td></tr>
+                    <tr><td>33</td><td>نبيل فرح محارب شنوده</td><td class="num-cell">01003472160</td><td class="num-cell">28403172102975</td><td class="email-cell">nabilfarah.84@gmail.com</td></tr>
+                    <tr><td>34</td><td>ابراهيم كامل على البدري</td><td class="num-cell">01204061975</td><td class="num-cell">29803031601571</td><td class="email-cell">ebrahimalba92@gmail.com</td></tr>
+                    <tr><td>35</td><td>محمد عبد العال السيد عبد العال</td><td class="num-cell">01003248035</td><td class="num-cell">28702152406037</td><td class="email-cell">m.abdelaal2011@gmail.com</td></tr>
+                    <tr><td>36</td><td>منه الله علاء محمد حمدان</td><td class="num-cell">01113516267</td><td class="num-cell">202600982</td><td class="email-cell">mennaala407@gmail.com</td></tr>
+                    <tr><td>37</td><td>امجد ناجى حسن على حسين</td><td class="num-cell">01050701070</td><td class="num-cell">202601240</td><td class="email-cell">Amged.nagy@gmail.com</td></tr>
+                    <tr><td>38</td><td>يوسف سعيد رشاد احمد</td><td class="num-cell">01003784510</td><td class="num-cell">202506629</td><td class="email-cell">youssefsaeed123@gmail.com</td></tr>
+                    <tr><td>39</td><td>مينا سميح اسحق سعد</td><td class="num-cell">01111228119</td><td class="num-cell">٢٨٩٠٢١٥٠١٠٦٦٩٨</td><td class="email-cell">ms.egy2010@gmail.com</td></tr>
+                    <tr><td>40</td><td>هاجر جمال محمد محمد</td><td class="num-cell">01153494548</td><td class="num-cell">29207202100069</td><td class="email-cell">hagargamal20026@gmail</td></tr>
+                    <tr><td>41</td><td>سارة يحيى سيد حسين</td><td class="num-cell">01112756988</td><td class="num-cell">29102070101102</td><td class="email-cell">sarah.yehia2018@gmail.com</td></tr>
+                    <tr><td>42</td><td>محمد احمد محمد الغرباوى</td><td class="num-cell">01002511880</td><td class="num-cell">28509271700038</td><td class="email-cell">eng.elgharbawy@gmail.com</td></tr>
+                    <tr><td>43</td><td>عبدالرحمن حسين عبدالرحمن فلمبان</td><td class="num-cell">+966555509917</td><td class="num-cell">CA23216</td><td class="email-cell">a.felemban@gmail.com</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- محتوى مادة SE203 (فارغ) -->
+    <div id="se203" class="subject-content">
+        <div class="empty-state">
+            <h3>لا توجد بيانات مسجلة لمادة SE203 حالياً.</h3>
+            <p>سيتم إضافة الطلاب فور التسجيل.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // دالة التبديل بين المواد الدراسية
+    function showSubject(subjectId, btn) {
+        // إخفاء كل المواد
+        document.querySelectorAll('.subject-content').forEach(el => el.classList.remove('active'));
+        
+        // إزالة التفعيل عن أزرار المواد
+        document.querySelectorAll('.subject-btn').forEach(el => el.classList.remove('active'));
+        
+        // إظهار المادة المطلوبة وتفعيل الزر
+        document.getElementById(subjectId).classList.add('active');
+        btn.classList.add('active');
+    }
+
+    // دالة التبديل بين الجدولين (حضوري / أونلاين)
+    function showTab(tabId, btn) {
+        document.querySelectorAll('.table-wrapper').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        btn.classList.add('active');
+        
+        // تصفير البحث عند التبديل
+        document.getElementById('searchInput').value = '';
+        filterData();
+    }
+
+    // دالة البحث الفوري
+    function filterData() {
+        const input = document.getElementById('searchInput').value.toUpperCase();
+        const activeTable = document.querySelector('.table-wrapper.active table');
+        if (!activeTable) return;
+        
+        const rows = activeTable.getElementsByTagName('tr');
+        
+        for (let i = 1; i < rows.length; i++) {
+            let textContent = rows[i].textContent || rows[i].innerText;
+            if (textContent.toUpperCase().indexOf(input) > -1) {
+                rows[i].style.display = '';
+            } else {
+                rows[i].style.display = 'none';
+            }
+        }
+    }
+</script>
+
+</body>
+</html>
